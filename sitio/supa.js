@@ -265,6 +265,11 @@
         return rpc("upf_eliminar", { p_id: body.id }).then(function () { return { ok: true }; });
       case "activar":
         return rpc("upf_activar", { p_id: body.id, p_activo: !!body.activo }).then(function () { return { ok: true }; });
+      case "bitacora":
+        return exigirPerfil(["admin"]).then(function () {
+          var de = (query.get("desde") || "2000-01-01"), ha = (query.get("hasta") || "2999-12-31");
+          return leerTabla("bitacora?select=id,fecha,actor_usuario,accion,objeto,detalle&fecha=gte." + de + "&fecha=lte." + ha + " 23:59:59&order=id.desc&limit=2000");
+        }).then(function (f) { return { eventos: f }; });
       case "guardar_config":
         return rpc("upf_guardar_config", { p_hora: String(body.hora_limite || "").trim() }).then(function () { horaLimite = String(body.hora_limite).trim(); return { ok: true, hora_limite: horaLimite }; });
     }
