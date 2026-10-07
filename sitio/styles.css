@@ -95,3 +95,7 @@ td.nowrap { white-space: nowrap; }
 .plazo.ok { border-color: #7cc79b; background: #f1faf4; }
 .plazo.aviso { border-color: #e0b94d; background: #fffaf0; }
 @media (max-width: 640px) { .plazo-t { font-size: 16px; } .btn { min-height: 44px; } input[type=text], input[type=password], input[type=date], select { min-height: 44px; font-size: 16px; } }
+
+.brand-logo { height: 44px; width: auto; display: block; flex: none; }
+.card.centrada .brand-logo { height: 64px; }
+@media (max-width: 520px) { .topbar .brand-logo { height: 34px; } }
