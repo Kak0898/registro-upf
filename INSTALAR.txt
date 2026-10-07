@@ -1,0 +1,34 @@
+INSTALACIÓN: Registro diario de complejos fronterizos (Supabase + Vercel o Netlify)
+================================================================================
+
+PARTE 1 · Crear la base de datos en Supabase (5 minutos)
+1. Entra a supabase.com > tu proyecto (o crea uno nuevo, plan gratis).
+2. Menú izquierdo: "SQL Editor" > "New query".
+3. Abre el archivo sql/instalar.sql, copia TODO su contenido, pégalo y pulsa "Run".
+   Debe terminar con "Success. No rows returned".
+4. Menú izquierdo: "Project Settings" > "API" (o "API Keys"). Copia:
+   - Project URL            (empieza con https://)
+   - la clave "anon" / "publishable" (la PÚBLICA. Nunca uses la "service_role").
+5. Abre public/config.js con el Bloc de notas y pega esos dos datos entre las comillas.
+
+PARTE 2 · Publicar la página (elige UNA opción)
+Opción A · Netlify (la más simple, sin GitHub):
+   1. Crea una cuenta gratis en netlify.com.
+   2. "Add new site" > "Deploy manually" > arrastra la CARPETA "public" completa.
+   3. Netlify te da una dirección web (puedes cambiarle el nombre).
+Opción B · Vercel:
+   1. Sube la carpeta "public" a un repositorio de GitHub.
+   2. En vercel.com: "Add New Project" > elige ese repositorio > Deploy.
+      (Framework: "Other"; sin comando de build; carpeta de salida: la raíz.)
+
+PARTE 3 · Primer uso
+1. Abre la dirección web. Verás "Primera configuración": crea la cuenta del administrador.
+2. En la pestaña "Cuentas" > "Crear cuentas faltantes" genera una cuenta con clave temporal
+   para cada uno de los 40 complejos (o crea una a una con "Nueva cuenta").
+3. Entrega a cada coordinador su usuario y clave temporal. En su primer ingreso elige su propia clave.
+4. Pestaña "Configuración": define la hora límite de reporte (por defecto 08:55, hora de Chile).
+
+NOTAS
+- Plan gratis de Supabase: pausa el proyecto tras 1 semana sin uso; se reactiva con un clic en el panel.
+- Las claves se guardan cifradas. Solo el administrador ve y gestiona cuentas.
+- Cada coordinador solo puede ver y registrar su propio complejo (últimos 7 días).

@@ -1,0 +1,8 @@
+# Versión antigua (PHP) y datos locales: no se suben a GitHub
+data/
+lib/
+api.php
+.htaccess
+LEEME.txt
+*.sqlite
+node_modules/
