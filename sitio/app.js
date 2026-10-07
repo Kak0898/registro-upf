@@ -111,7 +111,7 @@
     var rol = S.u.rol === "admin" ? "Administrador" : "Coordinador";
     var c = S.u.complejo ? porCid(S.u.complejo) : null;
     return h("header", { class: "topbar" },
-      h("div", { class: "brand" }, h("div", { class: "brand-mark" }, "UPF"), h("div", null, "Registro diario de complejos fronterizos")),
+      h("div", { class: "brand" }, h("img", { class: "brand-logo", src: "logo-upf.svg", alt: "UPF – Unidad de Pasos Fronterizos" }), h("div", null, "Registro diario de complejos fronterizos")),
       h("div", { class: "spacer" }),
       h("div", { class: "who" }, h("b", null, S.u.nombre), rol + (c ? " · " + nombreComplejo(c) : "")),
       h("button", { class: "btn sec small", onclick: function () { post("salir").then(function () { S.u = null; render(); }); } }, "Cerrar sesión"));
@@ -128,7 +128,7 @@
       post("entrar", { usuario: u.value, clave: p.value }).then(cargarEstado).catch(function (e) { err.appendChild(mensaje("error", e.message)); b.disabled = false; p.value = ""; p.focus(); });
     } }, err, campo("Usuario", u, null, "lu"), campo("Contraseña", p, null, "lp"), h("div", { class: "row" }, b));
     return h("div", { class: "page" }, h("div", { class: "card centrada" },
-      h("div", { class: "brand", style: "margin-bottom:14px" }, h("div", { class: "brand-mark" }, "UPF"), h("div", null, "Registro diario de complejos fronterizos")),
+      h("div", { class: "brand", style: "margin-bottom:14px" }, h("img", { class: "brand-logo", src: "logo-upf.svg", alt: "UPF – Unidad de Pasos Fronterizos" }), h("div", null, "Registro diario de complejos fronterizos")),
       h("h1", { style: "margin-bottom:6px" }, "Ingresar"),
       h("p", { class: "muted small" }, "Cada coordinador entra con el usuario y la contraseña que le entregó el administrador."), f));
   }
@@ -329,7 +329,7 @@
   }
 
   // ---------- administrador ----------
-  var PESTANAS = [["hoy", "Resumen del día"], ["registros", "Registros"], ["cuentas", "Cuentas de coordinadores"], ["excel", "Exportar a Excel"], ["config", "Configuración"], ["cuenta", "Mi cuenta"]];
+  var PESTANAS = [["hoy", "Resumen del día"], ["registros", "Registros"], ["cuentas", "Cuentas de coordinadores"], ["excel", "Exportar a Excel"], ["bitacora", "Bitácora"], ["config", "Configuración"], ["cuenta", "Mi cuenta"]];
   function vistaAdmin() {
     var tabs = h("div", { class: "tabs", role: "tablist" }, PESTANAS.map(function (p) {
       return h("button", { class: "tab", role: "tab", "aria-selected": String(S.pestana === p[0]), onclick: function () { S.pestana = p[0]; render(); } }, p[1]);
@@ -337,7 +337,7 @@
     app.appendChild(tabs);
     var page = h("div", { class: "page" });
     app.appendChild(page);
-    ({ hoy: adminHoy, registros: adminRegistros, cuentas: adminCuentas, excel: adminExcel, config: adminConfig, cuenta: function (p) { p.appendChild(h("h1", { style: "margin-bottom:14px" }, "Mi cuenta")); p.appendChild(vistaCambiarClave(false)); } })[S.pestana](page);
+    ({ hoy: adminHoy, registros: adminRegistros, cuentas: adminCuentas, excel: adminExcel, bitacora: adminBitacora, config: adminConfig, cuenta: function (p) { p.appendChild(h("h1", { style: "margin-bottom:14px" }, "Mi cuenta")); p.appendChild(vistaCambiarClave(false)); } })[S.pestana](page);
   }
 
   function modalEditar(cx, fecha, alCerrar) {
@@ -567,6 +567,38 @@
         post("guardar_config", { hora_limite: v }).then(function (j) { S.horaLimite = j.hora_limite; hl.value = j.hora_limite; err.appendChild(mensaje("ok", "Hora límite guardada: " + j.hora_limite + ".")); btn.disabled = false; })
           .catch(function (e) { err.appendChild(mensaje("error", e.message)); btn.disabled = false; });
       } }, err, campo("Hora límite (formato 24 horas, hora de Chile)", hl, "Por ejemplo 08:55. Aplica todos los días.", "cf-h"), h("div", { class: "row" }, btn))));
+  }
+
+  function adminBitacora(page) {
+    var hoyD = S.hoy, hace = new Date(hoyD + "T12:00:00"); hace.setDate(hace.getDate() - 30);
+    var iso = function (d) { return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); };
+    var iD = h("input", { type: "date", id: "bt-d", value: S.bDesde || iso(hace), max: hoyD }), iH = h("input", { type: "date", id: "bt-h", value: S.bHasta || hoyD, max: hoyD });
+    var iQ = h("input", { type: "search", id: "bt-q", placeholder: "Usuario, acción, complejo…", value: S.bTexto || "" });
+    var cuerpo = h("div"), todos = [];
+    page.appendChild(h("div", { class: "page-head" }, h("div", null, h("h1", null, "Bitácora de auditoría"),
+      h("div", { class: "muted" }, "Quién hizo qué y cuándo (hora de Chile). Solo la ve el administrador y no se puede modificar ni borrar. No guarda contraseñas."))));
+    page.appendChild(h("div", { class: "card" }, h("div", { class: "grid2" }, campo("Desde", iD, null, "bt-d"), campo("Hasta", iH, null, "bt-h")), campo("Buscar", iQ, null, "bt-q")));
+    page.appendChild(cuerpo);
+    function pintar() {
+      S.bTexto = iQ.value; var q = iQ.value.trim().toLowerCase(); cuerpo.innerHTML = "";
+      var f = todos.filter(function (e) { return !q || (e.actor_usuario + " " + e.accion + " " + e.objeto + " " + e.detalle).toLowerCase().indexOf(q) >= 0; });
+      if (!f.length) { cuerpo.appendChild(h("p", { class: "muted" }, "No hay eventos para esos filtros.")); return; }
+      cuerpo.appendChild(h("p", { class: "muted small" }, f.length + " evento(s)" + (todos.length >= 2000 ? " (se muestran los 2000 más recientes; acota las fechas para ver más)" : "") + "."));
+      cuerpo.appendChild(h("div", { class: "table-wrap" }, h("table", null,
+        h("thead", null, h("tr", null, ["Fecha y hora", "Realizado por", "Acción", "Sobre", "Detalle"].map(function (t) { return h("th", null, t); }))),
+        h("tbody", null, f.map(function (e) {
+          var p = e.fecha.split(" "), d = p[0].split("-");
+          return h("tr", null, h("td", null, d[2] + "/" + d[1] + "/" + d[0] + " " + p[1].slice(0, 5)), h("td", null, e.actor_usuario), h("td", null, e.accion), h("td", null, e.objeto), h("td", null, e.detalle));
+        })))));
+    }
+    function cargar() {
+      S.bDesde = iD.value; S.bHasta = iH.value; cuerpo.innerHTML = "";
+      if (!iD.value || !iH.value || iD.value > iH.value) { cuerpo.appendChild(mensaje("error", "Revisa las fechas: “desde” debe ser anterior o igual a “hasta”.")); return; }
+      api("bitacora", { query: "desde=" + iD.value + "&hasta=" + iH.value }).then(function (j) { todos = j.eventos; pintar(); })
+        .catch(function (e) { cuerpo.appendChild(mensaje("error", e.message)); });
+    }
+    iD.addEventListener("change", cargar); iH.addEventListener("change", cargar); iQ.addEventListener("input", pintar);
+    cargar();
   }
 
   function adminExcel(page) {
